@@ -1,0 +1,101 @@
+{
+  "name": "preact-pwa-install",
+  "amdName": "preact-pwa-install",
+  "version": "0.0.1",
+  "description": "Adds PWA install capability to your Preact app.",
+  "main": "dist/preact-pwa-install.js",
+  "minified:main": "dist/preact-pwa-install.min.js",
+  "module": "src/index.js",
+  "scripts": {
+    "build": "npm-run-all transpile optimize minify docs",
+    "transpile": "rollup -c -m ${npm_package_main}.map -f umd -n $npm_package_amdName -i $npm_package_module -o $npm_package_main",
+    "optimize": "uglifyjs $npm_package_main -bc -o $npm_package_main --source-map \"content=${npm_package_main}.map\"",
+    "minify": "uglifyjs $npm_package_main -mc -o $npm_package_minified_main --source-map \"content=${npm_package_main}.map\"",
+    "test": "npm-run-all -p lint test:unit",
+    "lint": "eslint src tests",
+    "lint:fix": "npm run lint -- --fix",
+    "test:unit": "mocha --require @babel/register tests/**/*.js",
+    "docs": "documentation readme src/index.js --section API -q",
+    "prepublishOnly": "npm run build && git commit -am $npm_package_version && git tag $npm_package_version && git push && git push --tags"
+  },
+  "author": "Tony MacDonell <tmacdonell@synacor.com>",
+  "license": "ISC",
+  "babel": {
+    "presets": [
+      "@babel/env"
+    ],
+    "plugins": [
+      [
+        "@babel/plugin-transform-react-jsx",
+        {
+          "pragma": "h"
+        }
+      ]
+    ]
+  },
+  "eslintConfig": {
+    "extends": "eslint-config-synacor"
+  },
+  "files": [
+    "src",
+    "dist"
+  ],
+  "devDependencies": {
+    "@babel/core": "^7.4.0",
+    "@babel/plugin-transform-react-jsx": "^7.3.0",
+    "@babel/preset-env": "^7.4.2",
+    "@babel/register": "^7.4.0",
+    "@babel/polyfill": "^7.4.0",
+    "documentation": "^9.3.1",
+    "eslint": "^5.15.3",
+    "eslint-config-synacor": "^3.0.3",
+    "npm-run-all": "^4.1.5",
+    "preact": "^8.4.2",
+    "preact-context-provider": "^1.1.1",
+    "rollup": "^1.7.0",
+    "rollup-plugin-babel": "^4.3.2",
+    "rollup-plugin-buble": "^0.19.6",
+    "uglify-js": "^3.5.1",
+    "undom": "^0.4.0",
+    "chai": "^4.2.0",
+    "mocha": "^6.0.2",
+    "sinon": "^7.3.0",
+    "sinon-chai": "^3.3.0"
+  },
+  "peerDependencies": {
+    "preact": "*",
+    "preact-compat": "*"
+  },
+  "jest": {
+    "verbose": true,
+    "setupFiles": [
+      "<rootDir>/tests/__mocks__/browserMocks.js"
+    ],
+    "testRegex": "(/(__tests__|tests)/.*|(\\.|/)(test|spec))\\.jsx?$",
+    "testPathIgnorePatterns": [
+      "/node_modules/",
+      "<rootDir>/tests/__mocks__/*"
+    ],
+    "testURL": "http://localhost:8080",
+    "moduleFileExtensions": [
+      "js",
+      "jsx"
+    ],
+    "moduleDirectories": [
+      "node_modules"
+    ],
+    "moduleNameMapper": {
+      "\\.(jpg|jpeg|png|gif|eot|otf|webp|svg|ttf|woff|woff2|mp4|webm|wav|mp3|m4a|aac|oga)$": "<rootDir>/tests/__mocks__/fileMock.js",
+      "\\.(css|less|scss)$": "identity-obj-proxy",
+      "^./style$": "identity-obj-proxy",
+      "^preact$": "<rootDir>/node_modules/preact/dist/preact.min.js",
+      "^react$": "preact-compat",
+      "^react-dom$": "preact-compat",
+      "^create-react-class$": "preact-compat/lib/create-react-class",
+      "^react-addons-css-transition-group$": "preact-css-transition-group"
+    }
+  },
+  "dependencies": {
+    "@babel/polyfill": "^7.4.0"
+  }
+}
