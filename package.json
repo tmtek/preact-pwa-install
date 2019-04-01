@@ -19,7 +19,7 @@
     "prepublishOnly": "npm run build && git commit -am $npm_package_version && git tag $npm_package_version && git push && git push --tags"
   },
   "author": "Tony MacDonell <tmacdonell@synacor.com>",
-  "license": "ISC",
+  "license": "MIT",
   "babel": {
     "presets": [
       "@babel/env"
@@ -97,5 +97,13 @@
   },
   "dependencies": {
     "@babel/polyfill": "^7.4.0"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tmtek/preact-pwa-install.git"
+  },
+  "bugs": {
+    "url": "https://github.com/tmtek/preact-pwa-install/issues"
+  },
+  "homepage": "https://github.com/tmtek/preact-pwa-install#readme"
 }

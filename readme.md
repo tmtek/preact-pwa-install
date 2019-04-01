@@ -1,5 +1,9 @@
 # preact-pwa-install
 
+```
+npm i preact-pwa-install
+```
+
 A package that helps preact apps prompt users to install them as a Progessive Web Application(PWA). [More information on the requirements for PWAs can be found here](https://developers.google.com/web/fundamentals/app-install-banners/).
 
 This package offers a simple Higher Order Component(HOC) that you can use to wrap components (ie:buttons) and turn them into app installers, or you can use the installation functions directly if that suits your needs.
