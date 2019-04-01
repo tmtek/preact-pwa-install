@@ -8,6 +8,9 @@ A package that helps preact apps prompt users to install them as a Progessive We
 
 This package offers a simple Higher Order Component(HOC) that you can use to wrap components (ie:buttons) and turn them into app installers, or you can use the installation functions directly if that suits your needs.
 
+### Installable Example Apps
+
+[Preact 8 PWA](https://nifty-allen-800eb0.netlify.com/) ([Source](https://github.com/tmtek/pwa-install-test))
 
 ## installer HOC
 
@@ -17,9 +20,9 @@ Any component that the `installer` HOC wraps will be provided with the following
 import { h } from 'preact';
 import installer from 'preact-pwa-install';
 
-function InstallButton({ isStandAlone, installPrompt }){
+function InstallButton({ isStandalone, installPrompt }){
      return installPrompt && <a href="#" onclick={installPrompt}>Install as PWA</a> 
-     		|| isStandAlone && 'PWA is installed!';
+     		|| isStandalone && 'PWA is installed!';
  }
 
  export default installer()(InstallButton);
@@ -42,13 +45,13 @@ The `awaitInstallPrompt` function allows you to listen to the browser for permis
 ```javascript
 import { awaitInstallPrompt } from 'preact-pwa-install';
 
-let cancel = awaitInstallPrompt(prompt => {
+let cancel = awaitInstallPrompt(prompt => 
 	prompt().then(success => console.log(
 		success && 'Successfully installed app as PWA.' 
 		|| 'User abandoned install.'
-	));
+	))
 	//On a successful install, listening will be stopped automatically.
-});
+);
 
 /* 
 cancel() at any time in the future to stop listening for prompts.
