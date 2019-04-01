@@ -38,7 +38,7 @@ The `awaitInstallPrompt` function allows you to listen to the browser for permis
 ```javascript
 import { awaitInstallPrompt } from 'preact-pwa-install';
 
-let cancel = awaitInstallPrompt((prompt) => {
+let cancel = awaitInstallPrompt(prompt => {
 	prompt().then(success => console.log(
 		success && 'Successfully installed app as PWA.' 
 		|| 'User abandoned install.'
