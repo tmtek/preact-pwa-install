@@ -58,7 +58,10 @@ export function awaitInstallPrompt(onPrompt) {
 	let installPromptListener;
 	let appInstalledListener;
     
-	let cancel = () => installPromptListener && window.removeEventListener('beforeinstallprompt', installPromptListener);
+	let cancel = () => {
+		installPromptListener && window.removeEventListener('beforeinstallprompt', installPromptListener);
+		installPromptListener = null;
+	};
     
 	installPromptListener = e => {
 		e.preventDefault();
@@ -75,6 +78,7 @@ export function awaitInstallPrompt(onPrompt) {
 		}).then(success => {
 			installPrompt = null;
 			appInstalledListener && window.removeEventListener('appinstalled', appInstalledListener);
+			appInstalledListener = null;
 			return success;
 		});
 		onPrompt(prompt, cancel);
@@ -147,7 +151,10 @@ export function installer() {
 export function useInstaller() {
     const [standalone] = useState(isStandalone());
     const [installPrompt, setInstallPrompt] = useState(null);
-    useEffect(() => awaitInstallPrompt(prompt => setInstallPrompt(prompt)));
+    useEffect(() => awaitInstallPrompt((prompt, cancel) => setInstallPrompt(() => prompt.then(installed => {
+		installed && cancel();
+		return installed;
+	}))));
     return ({ isStandalone:standalone, installPrompt });
 }
 
