@@ -12,6 +12,9 @@ This package offers a Hook for PreactX+, a simple Higher Order Component(HOC) th
 
 [Preact 8 PWA](https://nifty-allen-800eb0.netlify.com/) ([Source](https://github.com/tmtek/pwa-install-test))
 
+Preact X PWA([Source](https://github.com/tmtek/pwa-install-testX))
+
+
 ## useInstaller Hook
 
 For PreactX the `useInstaller` hook is available for you to use in your components:
