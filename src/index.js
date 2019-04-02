@@ -1,4 +1,5 @@
 import { h, Component } from 'preact';
+import { useState, useEffect } from 'preact/hooks';
 import { assign, getWindow } from './util'; // eslint-disable-line no-unused-vars
 
 /**
@@ -100,7 +101,7 @@ export function awaitInstallPrompt(onPrompt) {
  *      }
  * );
  */
-export default function installer() {
+export function installer() {
 	return Child => {
 		class Installer extends Component {
 			cancel() {
@@ -134,3 +135,12 @@ export default function installer() {
 		return Installer;
 	};
 }
+
+export function useInstaller() {
+    const [standalone] = useState(isStandalone());
+    const [installPrompt, setInstallPrompt] = useState(null);
+    useEffect(() => awaitInstallPrompt(prompt => setInstallPrompt(prompt)));
+    return ({ isStandalone:standalone, installPrompt });
+}
+
+export default useInstaller;

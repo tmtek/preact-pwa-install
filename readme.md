@@ -6,11 +6,36 @@ npm i preact-pwa-install
 
 A package that helps preact apps prompt users to install them as a Progessive Web Application(PWA). [More information on the requirements for PWAs can be found here](https://developers.google.com/web/fundamentals/app-install-banners/).
 
-This package offers a simple Higher Order Component(HOC) that you can use to wrap components (ie:buttons) and turn them into app installers, or you can use the installation functions directly if that suits your needs.
+This package offers a Hook for PreactX+, a simple Higher Order Component(HOC) that you can use to wrap components (ie:buttons) and turn them into app installers, or you can use the installation functions directly if that suits your needs.
 
 ### Installable Example Apps
 
 [Preact 8 PWA](https://nifty-allen-800eb0.netlify.com/) ([Source](https://github.com/tmtek/pwa-install-test))
+
+## useInstaller Hook
+
+For PreactX the `useInstaller` hook is available for you to use in your components:
+
+```javascript
+import { h } from 'preact';
+import { useInstaller } from 'preact-pwa-install';
+
+
+export default function App() {
+	
+	const {installPrompt, isStandalone} = useInstaller();
+	
+	return (
+		<div id="app">
+			<h1>Install Test</h1>
+			{
+				installPrompt && <a href="#" onclick={installPrompt}>Install as PWA</a> 
+				|| isStandalone && 'PWA is installed!'
+			}
+		</div>
+	);
+}
+```
 
 ## installer HOC
 
