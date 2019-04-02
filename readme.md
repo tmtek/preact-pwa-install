@@ -21,22 +21,14 @@ For PreactX the `useInstaller` hook is available for you to use in your componen
 
 ```javascript
 import { h } from 'preact';
-import { useInstaller } from 'preact-pwa-install';
+import useInstaller from 'preact-pwa-install';
 
+export default function InstallButton(){
+	
+	const { installPrompt, isStandalone } = useInstaller();
 
-export default function App() {
-	
-	const {installPrompt, isStandalone} = useInstaller();
-	
-	return (
-		<div id="app">
-			<h1>Install Test</h1>
-			{
-				installPrompt && <a href="#" onclick={installPrompt}>Install as PWA</a> 
-				|| isStandalone && 'PWA is installed!'
-			}
-		</div>
-	);
+	return installPrompt && <a href="#" onclick={installPrompt}>Install as PWA</a> 
+			|| isStandalone && 'PWA is installed!';
 }
 ```
 
@@ -46,7 +38,7 @@ Any component that the `installer` HOC wraps will be provided with the following
 
 ```javascript
 import { h } from 'preact';
-import installer from 'preact-pwa-install';
+import { installer } from 'preact-pwa-install';
 
 function InstallButton({ isStandalone, installPrompt }){
      return installPrompt && <a href="#" onclick={installPrompt}>Install as PWA</a> 
