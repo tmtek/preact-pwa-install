@@ -89,7 +89,7 @@ export function awaitInstallPrompt(onPrompt) {
  *
  * Props:
  * * isStandalone - true if the app is running in standalone mode.
- * * prompt - the prompt function that you call at any time.
+ * * installPrompt - the prompt function that you call at any time.
  *
  * @example
  * export installer()(
@@ -136,6 +136,14 @@ export function installer() {
 	};
 }
 
+/**
+ * A Hook that implements the awaitInstallPrompt() lifecycle and returns 
+ * an object that contains the isStandalone and installPrompt props:
+ * 
+ * @returns {Object}
+ * * isStandalone - true if the app is running in standalone mode.
+ * * installPrompt - the prompt function that you call at any time.
+ */
 export function useInstaller() {
     const [standalone] = useState(isStandalone());
     const [installPrompt, setInstallPrompt] = useState(null);
