@@ -1,7 +1,7 @@
 {
   "name": "preact-pwa-install",
   "amdName": "preact-pwa-install",
-  "version": "0.0.2",
+  "version": "0.1.0",
   "description": "Adds PWA install capability to your Preact app.",
   "main": "dist/preact-pwa-install.js",
   "minified:main": "dist/preact-pwa-install.min.js",
