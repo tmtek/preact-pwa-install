@@ -4,9 +4,38 @@ import 'undom/register';
 import chai, { expect } from 'chai';
 import sinonChai from 'sinon-chai';
 import { h, render } from 'preact';
-import installer, { isStandalone, awaitInstallPrompt } from '../../src';
+import { useInstaller, installer, isStandalone, awaitInstallPrompt } from '../../src';
 import * as Utils from '../../src/util';
 chai.use(sinonChai);
+
+
+global.requestAnimationFrame = (callback) => {
+	setTimeout(callback, 0);
+};
+
+function sleep(time) {
+	return new Promise(resolve => setTimeout(resolve, time));
+}
+
+function eventually(assertionFn, maxWait=1000) {
+	let max = Date.now()+maxWait;
+	return new Promise( (resolve, reject) => {
+		function check() {
+			try {
+				resolve(assertionFn());
+			}
+			catch (e) {
+				if (Date.now() < max) {
+					setTimeout(check, 1);
+				}
+				else {
+					reject(e);
+				}
+			}
+		}
+		check();
+	});
+}
 
 describe(`preact-pwa-install`, () => {
 
@@ -16,12 +45,20 @@ describe(`preact-pwa-install`, () => {
 	});
 
 	//https://developers.google.com/web/fundamentals/app-install-banners/#display-mode_media_query
-	let chromeStandaloneWindow = () => ({ matchMedia: () => ({
-		matches: []
-	}) });
+	let chromeStandaloneWindow = () => ({
+		matchMedia: () => ({
+			matches: []
+		}),
+		addEventListener: () => {},
+		removeEventListener: () => {}
+	});
 
 	//https://developers.google.com/web/fundamentals/app-install-banners/#safari
-	let safariStandaloneWindow = () => ({ navigator: { standalone: true } });
+	let safariStandaloneWindow = () => ({
+		navigator: { standalone: true },
+		addEventListener: () => {},
+		removeEventListener: () => {}
+	});
 
 	let installPromptSimulation = () => ({
 		window: {
@@ -152,22 +189,19 @@ describe(`preact-pwa-install`, () => {
 	});
 
 	describe(`installer`, () => {
-
 		let scratch = document.createElement('div'),
-			mount = jsx => root = render(jsx, scratch, root),
-			root;
+			mount = jsx =>  render(jsx, scratch);
+		beforeEach( () => mount(null) );
 
-	    beforeEach( () => mount( () => null ) );
-
-		it(`Should supply installPrompt values for wrapped component. installPrompt should be falsy until prompt is received from window, then it should be a function.`, async () => {
+		it(`Should supply installPrompt values for wrapped component. installPrompt should be falsy until prompt is received from window, then it should be a function.`, () => {
 			let installSim = installPromptSimulation();
 			let winStub = stub(Utils, 'getWindow').callsFake(() => installSim.window);
 			let Component = stub();
 			let WrappedComponent = installer()(Component);
-			await mount(<WrappedComponent />);
+			mount(<WrappedComponent />);
 			expect(Component).to.have.been.calledWithMatch({ installPrompt: match.falsy });
 			installSim.prompt();
-			await mount(<WrappedComponent />);
+			mount(<WrappedComponent />);
 			expect(Component).to.have.been.calledWithMatch({ installPrompt: match.func });
 			winStub.restore();
 		});
@@ -176,8 +210,8 @@ describe(`preact-pwa-install`, () => {
 			let winStub = stub(Utils, 'getWindow').callsFake(notStandaloneWindow);
 			let Component = stub();
 			let WrappedComponent = installer()(Component);
-			await mount(<WrappedComponent />);
-			expect(Component).to.have.been.calledWithMatch({ isStandalone: match.falsy });
+			mount(<WrappedComponent />);
+			await eventually(() => expect(Component).to.have.been.calledWithMatch({ isStandalone: false }));
 			winStub.restore();
 		});
 
@@ -185,9 +219,63 @@ describe(`preact-pwa-install`, () => {
 			let winStub = stub(Utils, 'getWindow').callsFake(chromeStandaloneWindow);
 			let Component = stub();
 			let WrappedComponent = installer()(Component);
-			await mount(<WrappedComponent />);
-			expect(Component).to.have.been.calledWithMatch({ isStandalone: match.truthy });
+			mount(<WrappedComponent />);
+			await eventually(() => expect(Component).to.have.been.calledWithMatch({ isStandalone: match.truthy }));
 			winStub.restore();
 		});
 	});
+
+	describe(`useInstaller`, () => {
+
+		let scratch = document.createElement('div'),
+			mount = jsx =>  render(jsx, scratch);
+		beforeEach( () => mount(null) );
+
+		it(`Should supply installPrompt values for wrapped component. installPrompt should be falsy until prompt is received from window, then it should be a function.`, async () => {
+			let installSim = installPromptSimulation();
+			let winStub = stub(Utils, 'getWindow').callsFake(() => installSim.window);
+			let argsStub = stub();
+			function Component() {
+				argsStub(useInstaller());
+			}
+			mount(<Component />);
+			await eventually(() =>
+				expect(argsStub).to.have.been.calledWithMatch({ installPrompt: match.falsy })
+			);
+			await sleep(100);
+			installSim.prompt();
+			await eventually(
+				() => expect(argsStub).to.have.been.calledWithMatch({ installPrompt: match.func }),
+				1500
+			);
+
+			await sleep(100);
+			winStub.restore();
+
+		});
+
+		it(`Should supply isStandalone=false when not running in a standalone browser.`, async () => {
+			let winStub = stub(Utils, 'getWindow').callsFake(notStandaloneWindow);
+			let argsStub = stub();
+			function Component() {
+				argsStub(useInstaller());
+			}
+			mount(<Component />);
+			await eventually(() => expect(argsStub).to.have.been.calledWithMatch({ isStandalone: false }))
+				.then(() => winStub.restore());
+		});
+		
+		it(`Should supply isStandalone=true when running in a standalone browser.`, async () => {
+			let winStub = stub(Utils, 'getWindow').callsFake(chromeStandaloneWindow);
+			let argsStub = stub();
+			function Component() {
+				argsStub(useInstaller());
+			}
+			mount(<Component />);
+			await eventually(() => expect(argsStub).to.have.been.calledWithMatch({ isStandalone: true }))
+				.then(() => winStub.restore());
+		});
+
+	});
+
 });

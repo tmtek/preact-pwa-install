@@ -15,7 +15,7 @@ export function getWindow() {
 		if (window) return window;
 	}
 	catch (e) {
-		return false;
+		return;
 	}
 }
 
