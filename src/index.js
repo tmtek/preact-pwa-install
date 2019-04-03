@@ -13,7 +13,7 @@ export function isStandalone() {
 	let window = getWindow();
 	if (!window) return false;
 
-	return window.matchMedia && window.matchMedia('(display-mode: standalone)').matches ||
+	return window.matchMedia && window.matchMedia('(display-mode: standalone)').matches && true ||
             window.navigator && window.navigator.standalone === true || false;
 }
 
@@ -83,7 +83,7 @@ export function awaitInstallPrompt(onPrompt) {
 		});
 		onPrompt(prompt, cancel);
 	};
-	window.addEventListener('beforeinstallprompt', installPromptListener);
+	window.addEventListener && window.addEventListener('beforeinstallprompt', installPromptListener);
 	return cancel;
 }
 
@@ -108,15 +108,18 @@ export function awaitInstallPrompt(onPrompt) {
 export function installer() {
 	return Child => {
 		class Installer extends Component {
+
+			static getDerivedStateFromProps(props, state) {
+				return state.isStandalone === undefined && { isStandalone: isStandalone() };
+			}
+
 			cancel() {
 				this.setState({ prompt: null });
 				this.canceltoken && this.canceltoken();
 			}
         
-			componentWillMount() {
-				let standalone = isStandalone();
-				this.setState({ isStandalone: standalone });
-				if (!standalone) {
+			componentDidMount() {
+				if (this.state.isStandalone === false) {
 					this.canceltoken = awaitInstallPrompt(prompt => {
 						this.setState({ prompt: () =>
 							prompt().then(installed => {
@@ -141,21 +144,23 @@ export function installer() {
 }
 
 /**
- * A Hook that implements the awaitInstallPrompt() lifecycle and returns 
+ * A Hook that implements the awaitInstallPrompt() lifecycle and returns
  * an object that contains the isStandalone and installPrompt props:
- * 
+ *
  * @returns {Object}
  * * isStandalone - true if the app is running in standalone mode.
  * * installPrompt - the prompt function that you call at any time.
  */
 export function useInstaller() {
-    const [standalone] = useState(isStandalone());
-    const [installPrompt, setInstallPrompt] = useState(null);
-    useEffect(() => awaitInstallPrompt((prompt, cancel) => setInstallPrompt(() => prompt.then(installed => {
-		installed && cancel();
-		return installed;
-	}))));
-    return ({ isStandalone:standalone, installPrompt });
+	const [standalone] = useState(isStandalone());
+	const [installPrompt, setInstallPrompt] = useState(null);
+	useEffect(() => awaitInstallPrompt((prompt, cancel) => {
+		setInstallPrompt({ prompt: () =>
+			prompt().then(installed => {
+				installed && cancel();
+				return installed;
+			})
+		});
+	}));
+	return ({ isStandalone: standalone, installPrompt: installPrompt && installPrompt.prompt });
 }
-
-export default useInstaller;
