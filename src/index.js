@@ -17,6 +17,8 @@ export function isStandalone() {
             window.navigator && window.navigator.standalone === true || false;
 }
 
+export const CACHE = {};
+
 /**
  * This function allows you to listen to the browser for the install prompt
  * that allows you to install the application standalone.
@@ -51,6 +53,12 @@ export function isStandalone() {
  * })
  */
 export function awaitInstallPrompt(onPrompt) {
+
+	if (CACHE.prompt) {
+		onPrompt(CACHE.prompt, () => {});
+		return;
+	}
+
 	let window = getWindow();
 	if (!window || isStandalone()) return null;
 
@@ -67,6 +75,7 @@ export function awaitInstallPrompt(onPrompt) {
 		e.preventDefault();
 		installPrompt = e;
 		let prompt = () =>  new Promise(resolve => {
+			CACHE.prompt = null;
 			appInstalledListener = () => {
 				resolve(true);
 			};
@@ -81,10 +90,25 @@ export function awaitInstallPrompt(onPrompt) {
 			appInstalledListener = null;
 			return success;
 		});
-		onPrompt(prompt, cancel);
+		if (onPrompt) {
+			onPrompt(prompt, cancel);
+		}
+		else {
+			CACHE.prompt = prompt;
+			cancel();
+		}
 	};
 	window.addEventListener && window.addEventListener('beforeinstallprompt', installPromptListener);
 	return cancel;
+}
+
+export function capturePrompt() {
+	let installer = {};
+	awaitInstallPrompt((prompt, cancel) => {
+		installer.prompt = prompt;
+		cancel();
+	});
+	return installer;
 }
 
 /**
@@ -130,7 +154,6 @@ export function installer() {
 					});
 				}
 			}
-            
 			componentWillUnmount() {
 				this.cancel();
 			}

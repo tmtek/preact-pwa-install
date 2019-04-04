@@ -19,6 +19,15 @@ npm i preact-pwa-install@preactx
 * [Preact 8 PWA](https://nifty-allen-800eb0.netlify.com/) ([Source](https://github.com/tmtek/pwa-install-test))
 * Preact X PWA([Source](https://github.com/tmtek/pwa-install-testX))
 
+### Important: Capturing the Prompt
+
+Before getting started, it is important to understand that the browser can dispatch the event to capture the install prompt very early in your application's lifecycle. You may not yet be listening for the event and will miss it.
+
+To ensure that you always capture it you must call `awaitInstallPrompt()` (with no args) as soon as you know a `window` object exists. Calling the function this way will cache any received prompt so that any calls to it later by other components will capture the reference.
+
+
+
+
 ## Preact X Hook
 
 ### useInstaller
