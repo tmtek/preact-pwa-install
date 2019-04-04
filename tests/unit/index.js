@@ -4,7 +4,7 @@ import 'undom/register';
 import chai, { expect } from 'chai';
 import sinonChai from 'sinon-chai';
 import { h, render } from 'preact';
-import installer, { isStandalone, awaitInstallPrompt } from '../../src';
+import installer, { isStandalone, awaitInstallPrompt, CACHE } from '../../src';
 import * as Utils from '../../src/util';
 chai.use(sinonChai);
 
@@ -115,6 +115,25 @@ describe(`preact-pwa-install`, () => {
 			winStub.restore();
 		});
 
+		it(`Should cache prompt if awaitInstallPrompt is called with no args, and next awaitInstallPrompt should use the result.`, () => {
+			let installSim = installPromptSimulation();
+			let winStub = stub(Utils, 'getWindow').callsFake(() => installSim.window);
+			
+			//cache prompt.
+			awaitInstallPrompt();
+			installSim.prompt('accepted');
+			expect(CACHE.prompt).to.be.ok;
+
+			let result;
+			awaitInstallPrompt(prompt => {
+				result = prompt;
+			});
+			expect(result).is.a('function');
+			result();
+			expect(CACHE.prompt).to.not.be.ok;
+			winStub.restore();
+		});
+
 		it(`Should return a Promise that resolves to true from the prompt function supplied to your onPrompt if install was accepted.`, async () => {
 			let installSim = installPromptSimulation();
 			let winStub = stub(Utils, 'getWindow').callsFake(() => installSim.window);
@@ -148,7 +167,6 @@ describe(`preact-pwa-install`, () => {
 
 			winStub.restore();
 		});
-
 	});
 
 	describe(`installer`, () => {

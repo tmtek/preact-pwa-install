@@ -16,7 +16,7 @@
     "lint:fix": "npm run lint -- --fix",
     "test:unit": "mocha --require @babel/register tests/**/*.js",
     "docs": "documentation readme src/index.js --section API -q",
-    "prepublishOnly": "npm run build && git commit -am $npm_package_version && git tag $npm_package_version && git push && git push --tags"
+    "prepublishOnly": "npm run build"
   },
   "author": "Tony MacDonell <tmacdonell@synacor.com>",
   "license": "MIT",
