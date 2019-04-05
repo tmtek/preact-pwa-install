@@ -17,7 +17,37 @@ export function isStandalone() {
             window.navigator && window.navigator.standalone === true || false;
 }
 
-export const CACHE = {};
+const CACHE = {
+	prompt: null,
+	installPromptListener: null,
+	appInstalledListener: null,
+	onPrompts: []
+};
+
+/**
+ * Any window listeners and cached prompts that have been captured by awaitInstallPrompt() are removed.
+ */
+export function reset() {
+	let window = getWindow();
+	if (CACHE.installPromptListener) {
+		window && window.removeEventListener && window.removeEventListener('beforeinstallprompt', CACHE.installPromptListener);
+		CACHE.installPromptListener = null;
+	}
+	if (CACHE.appInstalledListener) {
+		window && window.removeEventListener && window.removeEventListener('appinstalled', CACHE.appInstalledListener);
+		CACHE.appInstalledListener = null;
+	}
+	CACHE.prompt = null;
+	CACHE.onPrompts = [];
+}
+
+function removeOnPrompt(func) {
+	CACHE.onPrompts = CACHE.onPrompts.filter(onPrompt => onPrompt !== func);
+}
+
+function dispatchToOnPrompt() {
+	CACHE.onPrompts.forEach(onPrompt => onPrompt(CACHE.prompt));
+}
 
 /**
  * This function allows you to listen to the browser for the install prompt
@@ -53,62 +83,40 @@ export const CACHE = {};
  * })
  */
 export function awaitInstallPrompt(onPrompt) {
-
-	if (CACHE.prompt) {
-		onPrompt(CACHE.prompt, () => {});
-		return;
-	}
-
-	let window = getWindow();
-	if (!window || isStandalone()) return null;
-
-	let installPrompt;
-	let installPromptListener;
-	let appInstalledListener;
-    
-	let cancel = () => {
-		installPromptListener && window.removeEventListener('beforeinstallprompt', installPromptListener);
-		installPromptListener = null;
-	};
-    
-	installPromptListener = e => {
-		e.preventDefault();
-		installPrompt = e;
-		let prompt = () =>  new Promise(resolve => {
-			CACHE.prompt = null;
-			appInstalledListener = () => {
-				resolve(true);
-			};
-			window.addEventListener('appinstalled', appInstalledListener);
-			installPrompt.prompt();
-			installPrompt.userChoice.then(choiceResult => {
-				choiceResult.outcome !== 'accepted' && resolve(false);
+	if (!CACHE.installPromptListener) {
+		let window = getWindow();
+		if (!window || isStandalone()) return null;
+		CACHE.installPromptListener = e => {
+			e.preventDefault();
+			let installPrompt = e;
+			CACHE.prompt = () =>  new Promise(resolve => {
+				CACHE.appInstalledListener = () => {
+					resolve(true);
+				};
+				window.addEventListener('appinstalled', CACHE.appInstalledListener);
+				installPrompt.prompt();
+				installPrompt.userChoice.then(choiceResult => {
+					choiceResult.outcome !== 'accepted' && resolve(false);
+				});
+			}).then(success => {
+				installPrompt = null;
+				CACHE.appInstalledListener && window.removeEventListener('appinstalled', CACHE.appInstalledListener);
+				if (success) {
+					CACHE.prompt = null;
+					dispatchToOnPrompt();
+				}
+				return success;
 			});
-		}).then(success => {
-			installPrompt = null;
-			appInstalledListener && window.removeEventListener('appinstalled', appInstalledListener);
-			appInstalledListener = null;
-			return success;
-		});
-		if (onPrompt) {
-			onPrompt(prompt, cancel);
-		}
-		else {
-			CACHE.prompt = prompt;
-			cancel();
-		}
-	};
-	window.addEventListener && window.addEventListener('beforeinstallprompt', installPromptListener);
-	return cancel;
-}
-
-export function capturePrompt() {
-	let installer = {};
-	awaitInstallPrompt((prompt, cancel) => {
-		installer.prompt = prompt;
-		cancel();
-	});
-	return installer;
+			dispatchToOnPrompt();
+		};
+		window.addEventListener('beforeinstallprompt', CACHE.installPromptListener);
+	}
+	if (onPrompt) {
+		CACHE.onPrompts.push(onPrompt);
+		CACHE.prompt && onPrompt(CACHE.prompt);
+		return () => removeOnPrompt(onPrompt);
+	}
+	return () => reset();
 }
 
 /**
@@ -145,12 +153,7 @@ export function installer() {
 			componentDidMount() {
 				if (this.state.isStandalone === false) {
 					this.canceltoken = awaitInstallPrompt(prompt => {
-						this.setState({ prompt: () =>
-							prompt().then(installed => {
-								installed && this.cancel();
-								return installed;
-							})
-						});
+						this.setState({ prompt });
 					});
 				}
 			}
@@ -187,3 +190,5 @@ export function useInstaller() {
 	}));
 	return ({ isStandalone: standalone, installPrompt: installPrompt && installPrompt.prompt });
 }
+
+export default useInstaller;
