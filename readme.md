@@ -19,12 +19,25 @@ npm i preact-pwa-install@preactx
 * [Preact 8 PWA](https://nifty-allen-800eb0.netlify.com/) ([Source](https://github.com/tmtek/pwa-install-test))
 * Preact X PWA([Source](https://github.com/tmtek/pwa-install-testX))
 
-### Important: Capturing the Prompt
+### Capturing the browser prompt
 
-Before getting started, it is important to understand that the browser can dispatch the event to capture the install prompt very early in your application's lifecycle. You may not yet be listening for the event and will miss it.
+Before getting into the specifics of the tools on offer in this package, it is important to understand that the prompts the the browser hands off to this library can be given very early in the lifecycle of your application.
 
-To ensure that you always capture it you must call `awaitInstallPrompt()` (with no args) as soon as you know a `window` object exists. Calling the function this way will cache any received prompt so that any calls to it later by other components will capture the reference.
+It is recommended that you call the following function as early as possible in the lifetime of your app:
 
+```javascript
+import { awaitInstallPrompt } from 'preact-pwa-install';
+
+/*
+The following function call will start listening 
+for prompts from the browser. Prompts will be retained 
+so that any calls in the future may utilize them.
+*/
+cancel = awaitInstallPrompt(); 
+
+//cancel() //stops listening to the browser for prompts.
+
+```
 
 
 
@@ -36,7 +49,7 @@ The `useInstaller` hook is available for you to use in your components:
 
 ```javascript
 import { h } from 'preact';
-import useInstaller from 'preact-pwa-install';
+import { useInstaller } from 'preact-pwa-install';
 
 export default function InstallButton(){
 	
@@ -97,3 +110,11 @@ cancel() at any time in the future to stop listening for prompts.
 */
 
 ```
+
+This function may be called with no arguments, and doing so will just start listening to the browser for prompts. Prompts that are receieved are retained so that additional calls to `awaitInstallPrompt` will be invoked automatically with the retained prompt.
+
+## reset
+
+The reset function exists to be able to clear any retained prompts and to remove all window listeners used to capture prompts from the browser. 
+
+This function primarily for the purposes of testing. It is recommended that you use cancel functions returned from your `awaitInstallPrompt()` calls instead of turning to `reset()`.
